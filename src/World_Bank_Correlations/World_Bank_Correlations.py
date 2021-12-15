@@ -1,8 +1,8 @@
 import requests
 import pandas as pd
 import world_bank_data as wb
-import xml.etree.ElementTree as ET
-from math import sqrt
+import lxml
+
 
 def wb_corr(data, col, indicator, change=False):
     pd.options.mode.chained_assignment = None
@@ -118,6 +118,7 @@ def wb_corr(data, col, indicator, change=False):
 
 
 def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
+    from math import sqrt
     pd.options.mode.chained_assignment = None
     """
     Returns the relationship that an input variable has with the indicators in a chosen topic from the World Bank data, sorted by the strength of relationship.
@@ -289,6 +290,7 @@ def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
 
 
 def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
+    from math import sqrt
     pd.options.mode.chained_assignment = None
     """
     Returns the relationship that an input variable has with the variables from the World Bank data that match a search, sorted by the strength of relationship
@@ -403,6 +405,7 @@ def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     pd.options.mode.chained_assignment = orig_value
 
 def wb_every(data,col,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
+    from math import sqrt
     assert 'Country' in data.columns, "data must have a column containing countries called 'Country'"
     assert 'Year' in data.columns, "data must have a column containing years called 'Year'"
     assert type(col)==int, "col must be an integer of a column index that exists in data"
