@@ -8,33 +8,40 @@ A package to investigate relationships between World Bank variables. The package
 $ pip install World_Bank_Correlations
 ```
 
+# Use
+
+For all functions below, the input data contains information on a variable of interest. Among the columns should be one named "Country," one named "Year," and one with the data concerning the variable of interest. The integer column index that contins information on the variable should be used as the value for col. In all functions, if the relationship(s) between a World Bank indicator and one or more others is desired, data can be substituted with a call of wb.get_series() with the id of the indicator of interest and the desired value for mrv (see examples below and documentation on the package's Github page). If using wb.get_series(), it is necessary to use wb.get_series().reset_index() to ensure similarilty between column names in the resultant dataset and those created through the World Bank API. 
+
+In each function, if change is set to False, then any settings of nlim, cor_lim, or t_lim apply to the relationship between the input variable and World Bank variable. If change is set to True, these limits apply to the correlation between the annual percent changes of the two variables.
+
+In all functions, the output is a dataframe sorted by the absolute value of the correlation between your input variable and the desired World Bank variables if change is set to False. If change is set to True, the dataframe will be ordered on the correlation between the annual percent change of the input variable and the annual percent change of the World Bank variables chosen to investigate. 
+
 ## Relationship with a Specific Indicator or Indicators
 
+```bash
+wbc.wb_corr(data, col, indicator, change=False)
+```
+
+Find the relationship(s) between your chosen variable of interest and one or more specific World Bank variables. Indicator can be either a string of the id corresponding to the variable to test against or a list of such strings.
+
+Ex:
 ```bash
 import pandas as pd
 import lxml
 import wb_data as wb
 import requests
 from World_Bank_Correlations import World_Bank_Correlations as wbc
-wbc.wb_corr(data, col, indicator, change=False) 
-```
-where data is a dataframe containing data regarding your variable of interest, a column called "Country" and a column called "Year." Col is the integer index of the column containing data, and indicator is either the id of the World Bank variable to check or a list containing the ids of variables to check. This, as all commands in this package, can also be used to find the relationship between a World Bank indicator and other indicators by using wb.get_series() from the World Bank Data package as the data argument and 3 as the column argument. Otherwise, it can be used to find the relationships with a variable about which data is read from elsewhere. If change is set to True, the correlation between the annual percent changes of your input variable and the designated World Bank indicators will be found and displayed. 
-
-Output is a dataframe with the names of indicators as the index, organized by the absolute value of the correlation if change is False and by the correlation between the annual percent changes when change is False. 
-
-ex:
-```bash
 sample=wb.get_series('3.0.Gini',mrv=50).reset_index()
-wbc.wb_corr(sample,3,'SP.POP.TOTL')
+wbc.wb_corr(sample,3,['SP.POP.TOTL','1.0.HCount.1.90usd'])
 ```
 
 ## Relationships with Indicators by Topic
 ```bash
 wbc.wb_topic_corrs(data, col, topic, k=5, change=False, nlim=1, cor_lim=0, t_lim=0)
 ```
-This command will find the relationship between your variable of interest and all of the indicators listed under one of the 21 topics as defined by the World Bank, searchable through their API, and displays the k strongest relationships. Topic can either be the integer associated with the topic or a string with the name of the topic. nlim sets the minimum number of observations that can be used to find a relationship, cor_lim sets the minimum absolute value of correlations to be displayed, and t_lim sets the minimum absolute value of the t-score of correlations to be displayed. All minimum options apply to correlation if change is set to False and to the correlation between the annual percent changes if change is set to True. 
+This command will find the relationship between your variable of interest and all of the indicators listed under one of the 21 topics as defined by the World Bank, searchable through their API, and displays the k strongest relationships. Topic can either be the integer associated with the topic or a string with the name of the topic. 
 
-Output is a dataframe with the k strongest relationships, displaying the indicator as the index, the correlation, the number of observations that were used to find the correlation based on the availabilty of data, and additional information as requested.
+For all following functions: nlim sets the minimum number of observations that can be used to find a relationship, cor_lim sets the minimum absolute value of correlations to be displayed, and t_lim sets the minimum absolute value of the t-score of correlations to be displayed. All minimum options apply to correlation if change is set to False and to the correlation between the annual percent changes if change is set to True. 
 
 ex:
 ```bash
@@ -52,7 +59,7 @@ wbc.wb_topic_corrs(Bot40,2,1,k=3,change=True,t_lim=.5)
 ```bash
 wbc.wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0)
 ```
-This allows users to find the k strongest relationships between an input variable of interest and all World Bank indicators that match an input keyword search. 
+This allows users to find the k strongest relationships between an input variable of interest and all World Bank indicators whose names match an input keyword search. 
 
 ex:
 ```bash
