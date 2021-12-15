@@ -97,5 +97,5 @@ def test_wb_corrs_search():
         jumbo=pd.concat([jumbo,j])
     merged_pct_test=pd.merge(mumbo,jumbo,how='inner',on=['Country','Year'])
     change_cor_result=merged_pct_test.loc[:,'pct_chg_dat'].corr(merged_pct_test.loc[:,'pct_chg_ind'])
-    assert wbc.wb_corrs_search(sample_data,3,'income share',3,True).loc['Income Share of Second Quintile','Correlation_change']==change_cor_result, "ouchie"
+    assert wbc.wb_corrs_search(sample_data,3,'income share',3,True).loc['Income Share of Second Quintile','Correlation_change']==change_cor_result
 
