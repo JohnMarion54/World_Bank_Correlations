@@ -39,6 +39,14 @@ def test_wb_corr():
     assert corr_chg1==wbc.wb_corr(thing1,3,'3.0.IncShr.q1',True).loc['Income Share of First Quintile','Correlation_change']
     assert corr_chg2==wbc.wb_corr(thing1,3,['3.0.IncShr.q1','3.0.Gini'],True).loc['Gini Coefficient','Correlation_change']    
 
+def test_wb_corr2():
+    thing1=wbc.wb_corr(wb.get_series('1.0.HCount.1.90usd', mrv=50).reset_index(),3,'3.0.IncShr.q1')
+    thing2=wbc.wb_corr(wb.get_series('1.0.HCount.1.90usd', mrv=50).reset_index(),3,['3.0.IncShr.q1','3.0.Gini'])
+    assert len(thing1)==1
+    assert len(thing2)==2
+    assert abs(thing2.reset_index().loc[1,'Correlation'])<abs(thing2.reset_index().loc[0,'Correlation'])
+
+
 def test_wb_topic_corrs():
     cors=[]
     indicators=[]
@@ -75,6 +83,17 @@ def test_wb_topic_corrs():
     next_check=pd.merge(mumbo,jumbo,how='inner',on=['Country','Year'])
     chg_check_result=next_check.loc[:,'pct_chg1'].corr(next_check.loc[:,'pct_chg2'])
     assert wbc.wb_topic_corrs(sample_data,3,1,3,True).iloc[1,2]==chg_check_result
+
+def test_wb_corrs_topic2():
+    assertion_matrix = wbc.wb_topic_corrs(wb.get_series('3.0.Gini',mrv=50).reset_index(),3,'Energy & Mining')==wbc.wb_topic_corrs(wb.get_series('3.0.Gini',mrv=50).reset_index(),3,5)
+    assert assertion_matrix['Correlation'].sum()==len(assertion_matrix)
+    assert assertion_matrix['n'].sum()==len(assertion_matrix)
+    assert wbc.wb_topic_corrs(wb.get_series('3.0.Gini',mrv=50).reset_index(),3,'Energy & Mining',change=True,t_lim=.4).shape[1]==6
+    assert wbc.wb_topic_corrs(wb.get_series('3.0.Gini',mrv=50).reset_index(),3,'Energy & Mining',t_lim=.4).shape[1]==3
+    trial = wbc.wb_topic_corrs(wb.get_series('SP.POP.TOTL',mrv=50).reset_index(),3,1)
+    assert abs(trial.reset_index().loc[0,'Correlation'])>abs(trial.reset_index().loc[1,'Correlation'])
+    assert abs(trial.reset_index().loc[1,'Correlation'])>abs(trial.reset_index().loc[2,'Correlation'])
+
 
 def test_wb_corrs_search():
     sample_data=wb.get_series('3.0.Gini',mrv=50).reset_index()

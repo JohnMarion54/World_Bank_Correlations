@@ -5,7 +5,7 @@ import lxml
 
 
 def wb_corr(data, col, indicator, change=False):
-    pd.options.mode.chained_assignment = None
+    pd.options.mode.chained_assignment = None # Change option within function to avoid warning of value being placed on a copy of a slice. 
     """
     Returns the relationship that an input variable has with a chosen variable or chosen variables from the World Bank data, sorted by the strength of relationship
     Relationship can be either the correlation between the input variable and the chosen indicator(s) or the correlation in the annual percent changes
@@ -54,7 +54,7 @@ def wb_corr(data, col, indicator, change=False):
     n=[]
     if type(indicator)==str:
         assert indicator in list(pd.read_xml(requests.get('http://api.worldbank.org/v2/indicator?per_page=21000').content)['id']), "indicator must be the id of an indicator in the World Bank Data. Indicators can be found using the World Bank APIs. http://api.worldbank.org/v2/indicator?per_page=21000 to see all indicators or http://api.worldbank.org/v2/topic/_/indicator? to see indicators under a chosen topic (replace _ with integer 1-21)"
-        thing=pd.DataFrame(wb.get_series(indicator,mrv=50))
+        thing=pd.DataFrame(wb.get_series(indicator,mrv=50)) # Create a Pandas DataFrame with the data on the chosen indicator using the world_bank_data package
         merged=pd.merge(data,thing,how='inner',on=['Country','Year'])
         cors.append(merged.iloc[:,col].corr(merged.iloc[:,(merged.shape[1]-1)]))
         indicators.append(pd.DataFrame(wb.get_series(indicator,mrv=1)).reset_index()['Series'][0])
@@ -62,21 +62,21 @@ def wb_corr(data, col, indicator, change=False):
         if change==False:
             return pd.DataFrame(list(zip(indicators,cors,n)),columns=['Indicator','Correlation','n']).sort_values(by='Correlation',key=abs,ascending=False).set_index('Indicator')
         if change==True:
-            mumbo=pd.DataFrame()
+            mumbo=pd.DataFrame() #Create an empty dataframe to include the annual percent change data for the input variable
             cors_change=[]
             n_change=[]
             for country in data['Country'].unique():
                 s=data[data['Country']==country]
-                s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1)
+                s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1) # Generates warning message if option is not changed above
                 s.loc[:,'pct_chg_dat']=(((s.iloc[:,col]-s['lag_dat'])/s['lag_dat'])*100)
-                mumbo=pd.concat([mumbo,s]) #This now includes the percent change for the bottom 40
+                mumbo=pd.concat([mumbo,s]) 
             t=thing.reset_index()
-            jumbo=pd.DataFrame()
+            jumbo=pd.DataFrame() #Empty dataframe to contain the percent change data for World Bank data
             for country in t['Country'].unique():
                 y=t[t['Country']==country]
-                y.loc[:,'lag_ind']=y.iloc[:,3].shift(-1)
+                y.loc[:,'lag_ind']=y.iloc[:,3].shift(-1) # Generates warning message if pandas option is not changed above
                 y.loc[:,'pct_chg_ind']=(((y.iloc[:,3]-y['lag_ind'])/y['lag_ind'])*100)
-                jumbo=pd.concat([jumbo,y]) #The indicator data now includes percent change for the indicator
+                jumbo=pd.concat([jumbo,y]) 
             merged_pct=pd.merge(mumbo,jumbo,how='left',on=['Country','Year']) #inner?
             cors_change.append(merged_pct.loc[:,'pct_chg_dat'].corr(merged_pct.loc[:,'pct_chg_ind']))
             n_change.append(len(merged_pct[merged_pct.loc[:,'pct_chg_dat'].notnull() & merged_pct.loc[:,'pct_chg_ind'].notnull()]))
@@ -86,7 +86,7 @@ def wb_corr(data, col, indicator, change=False):
             assert type(indic)==str, "Elements of indicator must be strings"
             assert indic in list(pd.read_xml(requests.get('http://api.worldbank.org/v2/indicator?per_page=21000').content)['id']), "indicator must be the id of an indicator in the World Bank Data. Indicators can be found using the World Bank APIs. http://api.worldbank.org/v2/indicator?per_page=21000 to see all indicators or http://api.worldbank.org/v2/topic/_/indicator? to see indicators under a chosen topic (replace _ with integer 1-21)"
         for i in range(0,len(indicator)):
-            thing=pd.DataFrame(wb.get_series(indicator[i],mrv=50)).reset_index()
+            thing=pd.DataFrame(wb.get_series(indicator[i],mrv=50)).reset_index()  # Create a Pandas DataFrame with the data on the chosen indicator using the world_bank_data package
             merged=pd.merge(data,thing,how='inner',on=['Country','Year'])
             cors.append(merged.iloc[:,col].corr(merged.iloc[:,(merged.shape[1]-1)]))  
             indicators.append(pd.DataFrame(wb.get_series(indicator[i],mrv=1)).reset_index()['Series'][0])
@@ -97,17 +97,17 @@ def wb_corr(data, col, indicator, change=False):
             cors_change=[]
             n_change=[]
             for i in range(0,len(indicator)):
-                mumbo=pd.DataFrame()
-                jumbo=pd.DataFrame()
+                mumbo=pd.DataFrame() # Create an empty dataframe to include the annual percent change data for the input variable
+                jumbo=pd.DataFrame() # Empty dataframe to contain the percent change data for World Bank data
                 thing=pd.DataFrame(wb.get_series(indicator[i],mrv=50)).reset_index()
                 for country in data['Country'].unique():
                     s=data[data['Country']==country]
-                    s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1)
+                    s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1) # Generates warning message if pandas option is not changed above
                     s.loc[:,'pct_chg_dat']=(((s.iloc[:,col]-s['lag_dat'])/s['lag_dat'])*100)
                     mumbo=pd.concat([mumbo,s])
                 for country in thing['Country'].unique():
                     y=thing[thing['Country']==country]
-                    y.loc[:,'lag_ind']=y.iloc[:,3].shift(-1)
+                    y.loc[:,'lag_ind']=y.iloc[:,3].shift(-1) # Generates warning message if pandas option is not changed above
                     y.loc[:,'pct_chg_ind']=(((y.iloc[:,3]-y['lag_ind'])/y['lag_ind'])*100)
                     jumbo=pd.concat([jumbo,y])
                 merged_pct=pd.merge(mumbo,jumbo,how='left',on=['Country','Year'])
@@ -119,7 +119,7 @@ def wb_corr(data, col, indicator, change=False):
 
 def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     from math import sqrt
-    pd.options.mode.chained_assignment = None
+    pd.options.mode.chained_assignment = None # Change option within function to avoid warning of value being placed on a copy of a slice. 
     """
     Returns the relationship that an input variable has with the indicators in a chosen topic from the World Bank data, sorted by the strength of relationship.
     Relationship can be either the correlation between the input variable and the chosen indicator(s) or the correlation in the annual percent changes
@@ -245,10 +245,10 @@ def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
         cors_change=[]
         n_change=[]
         t_change=[]
-        mumbo=pd.DataFrame()
+        mumbo=pd.DataFrame() # Create a Pandas DataFrame with the data on the chosen indicator using the world_bank_data package
         for country in data['Country'].unique():
             s=data[data['Country']==country]
-            s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1)
+            s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1) # Generates warning message if pandas option is not changed above
             s.loc[:,'pct_chg_dat']=(((s.iloc[:,col]-s['lag_dat'])/s['lag_dat'])*100)
             mumbo=pd.concat([mumbo,s])
         for i in range(0,(len(top_df['id']))):
@@ -256,7 +256,7 @@ def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
                 indicator=top_df.loc[i,'id']
                 thing=pd.DataFrame(wb.get_series(indicator,mrv=50))
             except:
-                pass
+                pass # Some variables listed in the World Bank API have since been removed and will therefore be skipped
             merged=pd.merge(data,thing,how='inner',on=['Country','Year'])
             cor_i=(merged.iloc[:,col].corr(merged.iloc[:,(merged.shape[1]-1)]))
             cors.append(cor_i)
@@ -264,11 +264,11 @@ def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
             n.append(n_i)
             t.append((cor_i*(sqrt((n_i-2)/(1-(cor_i*cor_i))))))
             indicators.append(top_df.loc[i,'{http://www.worldbank.org}name'])
-            jumbo=pd.DataFrame()
+            jumbo=pd.DataFrame() #Empty dataframe to contain the percent change data for World Bank data
             thing_df=thing.reset_index()
             for country in thing_df['Country'].unique():
                 y=thing_df[thing_df['Country']==country]
-                y.loc[:,'lag_ind']=y.iloc[:,3].shift(-1)
+                y.loc[:,'lag_ind']=y.iloc[:,3].shift(-1) # Generates warning message if pandas option is not changed above
                 y.loc[:,'pct_chg_ind']=(((y.iloc[:,3]-y['lag_ind'])/y['lag_ind'])*100)
                 jumbo=pd.concat([jumbo,y])
             merged_pct=pd.merge(mumbo,jumbo,how='left',on=['Country','Year'])
@@ -291,7 +291,7 @@ def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
 
 def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     from math import sqrt
-    pd.options.mode.chained_assignment = None
+    pd.options.mode.chained_assignment = None # Change option within function to avoid warning of value being placed on a copy of a slice. 
     """
     Returns the relationship that an input variable has with the variables from the World Bank data that match a search, sorted by the strength of relationship
     Relationship can be either the correlation between the input variable and the chosen indicator(s) or the correlation in the annual percent changes
@@ -312,8 +312,8 @@ def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     ----------
     Pandas DataFrame
         A Pandas DataFrame containing the indicator names as the index and the correlation between the indicator and the input variable. If change set to True,
-            another column including the correlation between the annual percent changes of the variables will be included. The DataFrame is ordered on the
-            correlation if change is set to False and on the correlation of percent changes if change is set to True.
+            additional columns including the correlation between the annual percent changes of the variables and the number of observations used in this calculation 
+            will be included. The DataFrame is ordered on the correlation if change is set to False and on the correlation of percent changes if change is set to True.
             The number of rows in the dataframe will be, at most, k. The number of columns will depend on the settings of change, nlim, and t_lim.
             
     Examples
@@ -373,10 +373,10 @@ def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
         cors_chg=[]
         n_change=[]
         t_change=[]
-        mumbo=pd.DataFrame()
+        mumbo=pd.DataFrame() # Create a Pandas DataFrame with the data on the chosen indicator using the world_bank_data package
         for country in data['Country'].unique():
             m=data[data['Country']==country]
-            m.loc[:,'lag_dat']=m.iloc[:,col].shift(-1)
+            m.loc[:,'lag_dat']=m.iloc[:,col].shift(-1) # Generates warning message if pandas option is not changed above
             m.loc[:,'pct_chg_dat']=(((m.iloc[:,col]-m['lag_dat'])/m['lag_dat'])*100)
             mumbo=pd.concat([mumbo,m])
         for indic in inds['id']:
@@ -384,9 +384,9 @@ def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
             thing2=pd.DataFrame(wb.get_series(indic,mrv=50)).reset_index()
             for country in thing2['Country'].unique():
                 j=thing2[thing2['Country']==country]
-                j.loc[:,'lag_ind']=j.iloc[:,3].shift(-1)
+                j.loc[:,'lag_ind']=j.iloc[:,3].shift(-1) # Generates warning message if pandas option is not changed above
                 j.loc[:,'pct_chg_ind']=(((j.iloc[:,3]-j['lag_ind'])/j['lag_ind'])*100)
-                jumbo=pd.concat([jumbo,j])
+                jumbo=pd.concat([jumbo,j]) #Empty dataframe to contain the percent change data for World Bank data
             merged_pct=pd.merge(mumbo,jumbo,how='inner',on=['Country','Year'])
             cor_chg_i=merged_pct.loc[:,'pct_chg_dat'].corr(merged_pct.loc[:,'pct_chg_ind'])
             cors_chg.append(cor_chg_i)
@@ -405,6 +405,32 @@ def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     pd.options.mode.chained_assignment = orig_value
 
 def wb_every(data,col,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
+    pd.options.mode.chained_assignment = None # Change option within function to avoid warning of value being placed on a copy of a slice. 
+
+    """
+    Returns the k variables from the World Bank Dataset with the strongest relationship with an input variable, sorted by the strength of the relationship.
+    Relationship can be either the correlation that the input variable has with the variables from the World Bank Data or the correlation in the annual percent change of the variables.
+
+    Parameters
+    ----------
+    data: A pandas dataframe that contains a column of countries called "Country," a column of years called "Year," and a column of data for a variable
+    col: The integer index of the column in which the data of your variable exists in your dataframe
+    search: The search to conduct. Variables that match the given search will be identified and their relationships with the input variable found.
+    k: An integer indicating the number of variables to return. The k variables with the strongest relationship with the input variable will be returned.
+    change: A Boolean value. When set to True, the correlation between the annual percent change of the input variable and the annual percent change of 
+        chosen indicator(s) will be found and used to order the strength of relationships
+    nlim: An integer indicating the minimum n of indicators to be reported.
+    cor_lim: A real number indicating the minimum absolute value of the correlation between the input variable and World Bank indicators to be reported
+    t_lim: A real number indicating the minimum t score of the correlation between the input variable and World Bank indicators to be reported.
+
+    Returns
+    ----------
+    Pandas DataFrame
+        A Pandas DataFrame containing the indicator names as the index and the correlation between the indicator and the input variable. If change set to True,
+            additional columns including the correlation between the annual percent changes of the variables and the number of observations included in this calculation 
+            will be included. The DataFrame is ordered on the correlation if change is set to False and on the correlation of percent changes if change is set to True.
+            The number of rows in the dataframe will be, at most, k. The number of columns will depend on the settings of change, nlim, and t_lim.
+    """
     from math import sqrt
     assert 'Country' in data.columns, "data must have a column containing countries called 'Country'"
     assert 'Year' in data.columns, "data must have a column containing years called 'Year'"
@@ -444,21 +470,21 @@ def wb_every(data,col,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
         cors_change=[]
         n_change=[]
         t_change=[]
-        mumbo=pd.DataFrame()
+        mumbo=pd.DataFrame() # Create a Pandas DataFrame with the data on the chosen indicator using the world_bank_data package
         for country in data['Country'].unique():
             s=data[data['Country']==country]
-            s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1)
+            s.loc[:,'lag_dat']=s.iloc[:,col].shift(-1) # Generates warning message if pandas option is not changed above
             s.loc[:,'pct_chg_dat']=(((s.iloc[:,col]-s['lag_dat'])/s['lag_dat'])*100)
             mumbo=pd.concat([mumbo,s])
         for indic in here_we_go['id']:
-            jumbo=pd.DataFrame()
+            jumbo=pd.DataFrame() #Empty dataframe to contain the percent change data for World Bank data
             try:
                 thing=pd.DataFrame(wb.get_series(indic,mrv=50)).reset_index()
             except:
                 pass
             for country in thing['Country'].unique():
                 t=thing[thing['Country']==country]
-                t.loc[:,'lag_ind']=t.iloc[:,3].shift(-1)
+                t.loc[:,'lag_ind']=t.iloc[:,3].shift(-1) # Generates warning message if pandas option is not changed above
                 t.loc[:,'pct_chg_ind']=(((t.iloc[:,3]-t['lag_ind'])/t['lag_ind'])*100)
                 jumbo=pd.concat([jumbo,t])
             merged_pct=pd.merge(mumbo,jumbo,how='left',on=['Country','Year'])
@@ -476,3 +502,4 @@ def wb_every(data,col,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     if t_lim!=0:
         almost_there = pd.DataFrame(list(zip(indicators,cors,n,t,cors_change,n_change,t_change)),columns=['Indicator','Correlation','n','t','Correlation_change','n_change','t_change']).sort_values(by='Correlation_change',key=abs,ascending=False).set_index('Indicator')
         return almost_there.loc[(almost_there.n_change>nlim) & ((almost_there.Correlation_change>cor_lim) | (almost_there.Correlation_change<-cor_lim)) & ((almost_there.t_change>t_lim) | (almost_there.t_change<(-t_lim)))].head(k)
+    pd.options.mode.chained_assignment = orig_value
