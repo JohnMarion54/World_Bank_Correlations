@@ -8,7 +8,7 @@ A package to investigate relationships between World Bank variables. The package
 $ pip install World_Bank_Correlations
 ```
 
-# Usage
+# Usage (Also see WBC_Vignette.ipynb)
 
 For all functions below, the input data contains information on a variable of interest. Among the columns should be one named "Country," one named "Year," and one with the data concerning the variable of interest. The integer column index that contains information on the variable should be used as the value for col. In all functions, data can be a dataframe read in, or, if the relationship(s) between a World Bank indicator and one or more others is desired, a call of wb.get_series() (see examples below and documentation on the package's Github page). If using wb.get_series(), it is necessary to use wb.get_series().reset_index() to ensure similarilty between column names in the resultant dataset and those created through the World Bank API. 
 
