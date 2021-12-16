@@ -5,7 +5,7 @@ A package to investigate relationships between World Bank variables. The package
 ## Installation
 
 ```bash
-$ pip install World_Bank_Correlations
+$ pip install git+https://github.com/JohnMarion54/World_Bank_Correlations
 ```
 
 # Usage (Also see WBC_Vignette.ipynb)
