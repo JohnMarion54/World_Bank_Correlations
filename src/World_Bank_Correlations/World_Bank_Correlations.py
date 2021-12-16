@@ -175,7 +175,7 @@ def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     assert (type(cor_lim)==float or type(cor_lim)==int), "cor_lim must be a real number"
     assert (type(t_lim)==float or type(t_lim)==int), "n_lim must be a real number"
     
-    if topic=='Agricultural & Rural Development' or topic==1:
+    if topic=='Agriculture & Rural Development' or topic==1:
         top_df=pd.read_xml(requests.get('http://api.worldbank.org/v2/topic/1/indicator?per_page=50').content)
     if topic=='Aid Effectiveness'or topic==2:
         top_df=pd.read_xml(requests.get('http://api.worldbank.org/v2/topic/2/indicator?per_page=80').content)
@@ -234,7 +234,10 @@ def wb_topic_corrs(data,col,topic,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
             indicators.append(top_df['{http://www.worldbank.org}name'][i])
             n_i=(len(merged[merged.iloc[:,col].notnull() & merged.iloc[:,(merged.shape[1]-1)].notnull()]))
             n.append(n_i)
-            t.append((cor_i*(sqrt((n_i-2)/(1-(cor_i*cor_i))))))
+            if cor_i==1 or cor_i==-1: # Avoid division by 0
+                t.append(None)
+            else:
+                t.append((cor_i*(sqrt((n_i-2)/(1-(cor_i*cor_i))))))
         if t_lim==0:
             almost_there = pd.DataFrame(list(zip(indicators,cors,n)),columns=['Indicator','Correlation','n']).sort_values(by='Correlation',key=abs,ascending=False).set_index('Indicator')
             return almost_there.loc[(almost_there.n>nlim) & ((almost_there.Correlation>cor_lim) | (almost_there.Correlation<-cor_lim))].head(k)
@@ -354,14 +357,20 @@ def wb_corrs_search(data,col,search,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
     n=[]
     t=[]
     for indic in inds['id']:
-        thing=pd.DataFrame(wb.get_series(indic,mrv=50))
+        try:
+            thing=pd.DataFrame(wb.get_series(indic,mrv=50))
+        except:
+            pass
         merged=pd.merge(data,thing,how='left',on=['Country','Year'])
         cor_i=merged.iloc[:,col].corr(merged.iloc[:,(merged.shape[1]-1)])
         cors.append(cor_i)
         indicators.append(pd.DataFrame(wb.get_series(indic,mrv=1)).reset_index()['Series'][0])
         n_i=len(merged[merged.iloc[:,col].notnull() & merged.iloc[:,(merged.shape[1]-1)].notnull()])
         n.append(n_i)
-        t.append((cor_i*(sqrt((n_i-2)/(1-(cor_i*cor_i))))))
+        if cor_i==-1 or cor_i==1: # Avoid division by 0. 
+            t.append(None)
+        else:
+            t.append((cor_i*(sqrt((n_i-2)/(1-(cor_i*cor_i))))))
     if change==False:
         if t_lim==0:
             almost_there = pd.DataFrame(list(zip(indicators,cors,n)),columns=['Indicator','Correlation','n']).sort_values(by='Correlation',key=abs,ascending=False).set_index('Indicator')
@@ -457,7 +466,10 @@ def wb_every(data,col,k=5,change=False,nlim=1,cor_lim=0,t_lim=0):
         n.append(n_i)
         cor_i=merged.iloc[:,col].corr(merged.iloc[:,(merged.shape[1]-1)])
         cors.append(cor_i)
-        t.append((cor_i*(sqrt((n_i-2)/(1-(cor_i*cor_i))))))
+        if cor_i==1 or cor_i==-1: # Avoid division by 0
+            t.append(None)
+        else:
+            t.append((cor_i*(sqrt((n_i-2)/(1-(cor_i*cor_i))))))
         indicators.append(thing.loc[0,'Series'])
     if change==False:
         if t_lim==0:
